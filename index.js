@@ -210,15 +210,31 @@ function generateForConfig(imageObj, settings, config) {
         var defer = Q.defer();
         var image = imageObj.splash.clone();
 
-        var x = (image.bitmap.width - definition.width) / 2;
-        var y = (image.bitmap.height - definition.height) / 2;
+        var size_width = image.bitmap.width;
+        var size_height = image.bitmap.height;
+
+        if (definition.width < 1200 || definition.height < 1200) {
+          var reduce_rate = Math.max(
+            1200 / definition.width,
+            1200 / definition.height
+          );
+          size_width = Math.round(size_width / reduce_rate);
+          size_height = Math.round(size_height / reduce_rate);
+        }
+
+        var x = (size_width - definition.width) / 2;
+        var y = (size_height - definition.height) / 2;
         var width = definition.width;
         var height = definition.height;
 
         var outputFilePath = path.join(platformPath, definition.name);
 
         image
+            .resize(size_width, size_height, image.RESIZE_BICUBIC)
             .crop(x, y, width, height)
+            .rgba(false)
+            .deflateLevel(9)
+            .deflateStrategy(3)
             .write(outputFilePath,
                 (err) => {
                     if (err) defer.reject(err);
